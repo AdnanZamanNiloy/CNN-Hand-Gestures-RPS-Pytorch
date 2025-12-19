@@ -197,17 +197,14 @@ The notebook will automatically:
 
 ## 📎 Submission Links
 
-* **GitHub Repository:** [https://github.com/YOUR_USERNAME/cnn-rps-pytorch](https://github.com/YOUR_USERNAME/cnn-rps-pytorch)
-* **Google Colab Notebook:** *(Paste Colab link here)*
+* **GitHub Repository:** ([(https://github.com/AdnanZamanNiloy/cnn-rps-pytorch])
+* **Google Colab Notebook:** *([https://colab.research.google.com/drive/1Sid9visM6uJVqIQTTgqw7VKRWEZ3gXhQ])*
 
 ---
 
 ## 👨‍🎓 Author
 
 * **Name:** Adnan Zaman Niloy
-* **Degree:** B.Sc. in Computer Science & Engineering
-* **Interests:** Deep Learning, Computer Vision, Machine Learning
-
 ---
 
 ## 📝 Acknowledgements
