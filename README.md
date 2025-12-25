@@ -1,222 +1,269 @@
-# 🧠 Rock–Paper–Scissors Image Classification using CNN (PyTorch)
 
-## 📌 Project Overview
 
-This project implements a **Convolutional Neural Network (CNN)** using **PyTorch** to classify hand gesture images into **Rock, Paper, and Scissors**.
-The model is trained on a **standard Rock–Paper–Scissors dataset** and evaluated on **real-world smartphone images** captured by the author to assess generalization beyond controlled datasets.
 
-The entire pipeline is **fully automated**, reproducible, and designed to run end-to-end in **Google Colab** without any manual file uploads.
+# 🧠 Rock–Paper–Scissors Hand Gesture Classification Using CNN (PyTorch)
 
----
+## 1️⃣ Introduction
 
-## 🎯 Project Objectives
+This project presents an end-to-end implementation of a **Convolutional Neural Network (CNN)** for **Rock–Paper–Scissors (RPS)** hand gesture classification using **PyTorch**.  
+The model is trained on **two standard benchmark datasets** and evaluated on both **in-distribution data** and **real-world smartphone images** to analyze generalization performance.
 
-* Build a complete **CNN image classification workflow** in PyTorch
-* Train on a **standard dataset**
-* Perform **essential image preprocessing**
-* Test the trained model on **custom phone images**
-* Visualize performance using professional evaluation tools
-* Analyze **real-world generalization limitations**
+The goal of this project is not only to achieve high accuracy but also to **study the limitations of CNN models when deployed in real-world environments**.
 
 ---
 
-## 🗂️ Dataset Description
+## 2️⃣ Datasets Used
 
-### 🔹 Standard Dataset
+### 2.1 Kaggle Rock–Paper–Scissors Dataset
 
-* **Name:** Rock–Paper–Scissors Dataset
-* **Source:** Kaggle
-* **Link:** [https://www.kaggle.com/datasets/drgfreeman/rockpaperscissors](https://www.kaggle.com/datasets/drgfreeman/rockpaperscissors)
-* **Classes:** rock, paper, scissors
-* **Image Type:** RGB
-* **Loading Method:** `torchvision.datasets.ImageFolder`
+- **Source:** Kaggle  
+- **Link:** https://www.kaggle.com/datasets/drgfreeman/rockpaperscissors  
+- **Classes:** Rock, Paper, Scissors  
+- **Image Type:** RGB  
+- **Characteristics:**
+  - Clean background
+  - Centered hand gestures
+  - Consistent lighting
 
-> **Note:** This dataset is not natively available in `torchvision.datasets`.
-> Therefore, `ImageFolder` is used, which is an officially supported torchvision dataset loader.
-
----
-
-### 🔹 Custom Dataset (Phone Images)
-
-* **Source:** Smartphone camera
-* **Number of Images:** 10
-* **Classes:** Rock, Paper, Scissors
-* **Conditions:**
-
-  * Plain background (table surface)
-  * Single hand per image
-  * Natural lighting
-* **Purpose:** Real-world model evaluation
+This dataset provides a controlled environment suitable for supervised CNN training.
 
 ---
 
-## 📁 Repository Structure
+### 2.2 TensorFlow Rock–Paper–Scissors Dataset
 
-```text
-cnn-rps-pytorch/
-│
-├── dataset/
-│   ├── rps/
-│   │   ├── rock/
-│   │   ├── paper/
-│   │   └── scissors/
-│   │
-│   └── phone/
-│       ├── rock_1.jpg
-│       ├── paper_1.jpg
-│       ├── scissors_1.jpg
-│       └── ...
-│
-├── model/
-│   └── rps_cnn.pth
-│
-├── 190110.ipynb
-└── README.md
+- **Source:** TensorFlow Datasets (TFDS)  
+- **Characteristics:**
+  - Larger dataset size
+  - Slight pose variations
+  - Still captured under controlled conditions
+
+Both Kaggle and TensorFlow datasets belong to the **same visual domain**, allowing the CNN to learn highly discriminative features.
+
+---
+
+### 2.3 Custom Smartphone Dataset (Evaluation Only)
+
+- **Source:** Author’s smartphone camera  
+- **Number of Images:** 10  
+- **Conditions:**
+  - Natural lighting
+  - Real backgrounds
+  - Different camera angles
+  - Varying hand scales
+
+This dataset is used **only for testing** to evaluate real-world generalization.
+
+---
+
+## 3️⃣ Data Preprocessing
+
+### 3.1 Training Transform (With Data Augmentation)
+
+- Resize to **224 × 224**
+- Random horizontal flip
+- Random rotation
+- Color jitter (brightness & contrast)
+- Convert to tensor
+- Normalize using ImageNet statistics
+
 ```
 
----
+Mean = [0.485, 0.456, 0.406]
+Std  = [0.229, 0.224, 0.225]
 
-## 🔄 Data Preprocessing
+````
 
-All images (standard dataset and phone images) are processed to ensure **consistent tensor formatting**.
+### 3.2 Validation & Phone Image Transform
 
-### 🔹 Training Transform (with Data Augmentation)
-
-* Resize to **224 × 224**
-* Random horizontal flip
-* Random rotation
-* Color jitter (brightness & contrast)
-* Convert to tensor
-* Normalize using ImageNet mean and standard deviation
-
-### 🔹 Validation & Phone Transform
-
-* Resize to **224 × 224**
-* Convert to tensor
-* Normalize using the **same mean/std**
-
-```text
-Mean: [0.485, 0.456, 0.406]
-Std:  [0.229, 0.224, 0.225]
-```
-
-> Data augmentation is applied **only during training**, following best practices.
+- Resize to **224 × 224**
+- Convert to tensor
+- Apply the same normalization
+- No data augmentation
 
 ---
 
-## 🏗️ CNN Architecture
+## 4️⃣ CNN Architecture
 
-The model consists of:
+The CNN consists of **three convolutional blocks** followed by a **fully connected classifier**.
 
-* **3 Convolutional Blocks**
+### 4.1 Model Implementation
 
-  * Convolution → ReLU → MaxPooling
-* **Fully Connected Classifier**
+```python
+class CNN(nn.Module):
+    def __init__(self, num_classes=3):
+        super().__init__()
 
-  * Dense layer with ReLU
-  * Dropout for regularization
-  * Output layer with 3 neurons
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 32, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
 
-### 🔧 Training Configuration
+            nn.Conv2d(32, 64, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+        )
+
+        self.classifier = nn.Sequential(
+            nn.Linear(128 * 28 * 28, 256),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(256, num_classes)
+        )
+
+    def forward(self, x):
+        x = self.features(x)
+        x = x.view(x.size(0), -1)
+        return self.classifier(x)
+````
+
+### 4.2 Architecture Summary
+
+| Component              | Description          |
+| ---------------------- | -------------------- |
+| Convolution Layers     | Feature extraction   |
+| ReLU                   | Non-linearity        |
+| MaxPooling             | Spatial downsampling |
+| Dropout (0.5)          | Overfitting control  |
+| Fully Connected Layers | Final classification |
+
+---
+
+## 5️⃣ Training Configuration
 
 * **Loss Function:** CrossEntropyLoss
 * **Optimizer:** Adam
 * **Batch Size:** 64
 * **Epochs:** 10
-* **Device:** GPU (if available)
+* **Device:** GPU (CUDA) if available
 
 ---
 
-## 📊 Evaluation & Visualizations
+## 6️⃣ Experimental Results
 
-### 📈 Training Curves
+### 6.1 Training & Validation Curves
 
-* Loss vs Epochs
-* Accuracy vs Epochs (Training & Validation)
+<img width="1181" height="547" alt="Screenshot From 2025-12-25 23-30-26" src="https://github.com/user-attachments/assets/d7d792f0-707b-439f-93e9-2701a3aa0c90" />
 
-### 🔍 Confusion Matrix
 
-A heatmap visualizing classification performance on the validation set.
-
-### 📸 Real-World Prediction Gallery
-
-Predictions on custom smartphone images with confidence scores.
-
-Example:
-
-```text
-Predicted: Paper (98.6%)
-```
+* Training accuracy reaches **~100%**
+* Validation accuracy stabilizes around **98–99%**
+* Indicates strong in-distribution learning
 
 ---
 
-## ⚠️ Real-World Generalization Analysis
+### 6.2 Confusion Matrix (Validation Set)
 
-The model achieves **high accuracy on the standard dataset** but shows **reduced performance on custom phone images**.
+<img width="645" height="547" alt="Screenshot From 2025-12-25 23-30-41" src="https://github.com/user-attachments/assets/1d2fe38f-cb02-4116-8ceb-487384d1fff5" />
 
-### 🔍 Reason
 
-This performance gap is primarily caused by:
-
-* **Domain shift** between controlled dataset images and real-world photos
-* **Background bias**, as all phone images share a similar surface
-* Differences in lighting, camera angle, and hand appearance
-
-Although data augmentation improves robustness, full generalization requires **greater real-world data diversity or domain adaptation**.
-
-This behavior highlights a **known and important limitation of CNNs** when deployed outside their training distribution.
+* Minimal class confusion
+* Most errors occur between **scissors → paper**
 
 ---
 
-## 🚀 How to Run (Fully Automated)
+### 6.3 Predictions on Standard Datasets
 
-1. Open the Colab notebook: `190110.ipynb`
-2. Click **Runtime → Run All**
+<img width="804" height="405" alt="Screenshot From 2025-12-25 23-31-42" src="https://github.com/user-attachments/assets/c8b9ebce-c177-4fb4-8eb1-d80414299b74" />
 
-The notebook will automatically:
-
-1. Clone this GitHub repository
-2. Load the dataset
-3. Train the CNN (or load saved weights)
-4. Generate evaluation plots
-5. Predict custom phone images
-
-🚫 **No manual file uploads are required**
+* Near-perfect confidence
+* Correct predictions for Kaggle and TensorFlow datasets
 
 ---
 
-## 📌 Key Features
+### 6.4 Predictions on Real Smartphone Images
+<img width="1169" height="750" alt="Screenshot From 2025-12-25 23-31-18" src="https://github.com/user-attachments/assets/b9bbfe99-751d-4fea-9b70-f9f4e1adba2b" />
 
-* Fully automated CNN pipeline
-* Professional preprocessing workflow
-* Real-world testing with phone images
-* Clear visualization and error analysis
-* Assignment-compliant and reproducible
+* Several incorrect predictions
+* Reduced confidence scores
+* Clear performance degradation
 
 ---
 
-## 📎 Submission Links
+## 7️⃣ Why Does the Model Fail on Real Phone Images?
 
-* **GitHub Repository:** ([(https://github.com/AdnanZamanNiloy/cnn-rps-pytorch])
-* **Google Colab Notebook:** *([https://colab.research.google.com/drive/1Sid9visM6uJVqIQTTgqw7VKRWEZ3gXhQ])*
+Despite excellent performance on standard datasets, the model struggles on real phone images due to the following reasons:
+
+### 7.1 Domain Shift (Primary Reason)
+
+Training images are captured in controlled environments, while phone images introduce:
+
+* Different backgrounds
+* Natural lighting variations
+* Camera noise and blur
+* Scale and orientation differences
+
+This creates a **distribution mismatch** between training and testing data.
+
+---
+
+### 7.2 Background Bias
+
+The CNN unintentionally learns background-related features instead of purely hand geometry.
+When the background changes, predictions become unreliable.
+
+---
+
+### 7.3 Limited Model Capacity
+
+The CNN is trained from scratch and lacks the representational power of large pretrained models.
+
+---
+
+### 7.4 Small Real-World Sample Size
+
+Only **10 phone images** are insufficient for real-world adaptation.
+
+---
+
+## 8️⃣ Key Insight
+
+> High validation accuracy does **not guarantee real-world robustness**.
+
+This project demonstrates a common deep learning limitation:
+**CNNs generalize poorly outside their training distribution without domain adaptation or transfer learning.**
+
+---
+
+## 9️⃣ Future Improvements
+
+* Apply **Transfer Learning** (ResNet, MobileNet)
+* Collect more real-world images
+* Use background randomization
+* Perform fine-tuning on phone images
+
+---
+
+## 🔟 Conclusion
+
+This project demonstrates:
+
+* A complete CNN-based image classification pipeline
+* Strong performance on two benchmark datasets
+* Clear analysis of real-world generalization failure
+
+The results emphasize the importance of **data diversity and domain alignment** in deep learning systems.
 
 ---
 
 ## 👨‍🎓 Author
 
-* **Name:** Adnan Zaman Niloy
+**Adnan Zaman Niloy**
+ID: 210142, Dept: CSE(JUST)
+
 ---
 
-## 📝 Acknowledgements
+## 📎 Acknowledgements
 
 * Kaggle Rock–Paper–Scissors Dataset
-* PyTorch & Torchvision Libraries
+* TensorFlow Datasets
+* PyTorch & Torchvision
 
 ---
 
-### ✅ Final Note
+### ✅ Final Academic Note
 
-This project demonstrates not only model implementation but also a **critical understanding of real-world limitations**, which is an essential learning outcome in deep learning systems.
-
----
-
+This work highlights the importance of **critical model evaluation**, not just accuracy metrics, which is essential for real-world deep learning applications.
