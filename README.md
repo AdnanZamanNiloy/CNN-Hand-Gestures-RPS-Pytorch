@@ -192,7 +192,7 @@ Despite excellent performance on standard datasets, the model struggles on real 
 Training images are captured in controlled environments, while phone images introduce:
 
 * Different backgrounds
-* Natural lighting variations
+* lighting variations
 * Camera noise and blur
 * Scale and orientation differences
 
