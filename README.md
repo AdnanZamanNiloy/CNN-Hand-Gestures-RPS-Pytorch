@@ -46,8 +46,8 @@ Both Kaggle and TensorFlow datasets belong to the **same visual domain**, allowi
 - **Source:** Author’s smartphone camera  
 - **Number of Images:** 10  
 - **Conditions:**
-  - Natural lighting
-  - Real backgrounds
+  - proper lighting
+  - White clean backgrounds
   - Different camera angles
   - Varying hand scales
 
