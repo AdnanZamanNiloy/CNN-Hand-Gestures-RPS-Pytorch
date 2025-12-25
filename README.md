@@ -1,7 +1,11 @@
 
+<div align="center">
 
+# 🧠 ✊ ✋ ✌️  
+## Rock–Paper–Scissors Image Classification using CNN (PyTorch)
 
-# 🧠 Rock–Paper–Scissors Hand Gesture Classification Using CNN (PyTorch)
+</div>
+
 
 ## 1️⃣ Introduction
 
@@ -264,6 +268,6 @@ ID: 210142, Dept: CSE(JUST)
 
 ---
 
-### ✅ Final Academic Note
+### ✅ Final Note
 
 This work highlights the importance of **critical model evaluation**, not just accuracy metrics, which is essential for real-world deep learning applications.
