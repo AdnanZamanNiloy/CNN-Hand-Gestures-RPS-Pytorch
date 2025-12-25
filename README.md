@@ -1,7 +1,7 @@
 
 <div align="center">
 
-# 🧠 ✊ ✋ ✌️  
+# ✊ ✋ ✌️  
 ## Rock–Paper–Scissors Image Classification using CNN (PyTorch)
 
 </div>
